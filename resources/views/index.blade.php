@@ -33,7 +33,7 @@
                     </div>
                     <div class="card-action">
                         <button type="button" id="botaoLimpar" onclick="limpar()" class="waves-effect waves-light btn black">Limpar</button>
-                        <button type="submit" id="botaoGerar" onclick="validarJson('json')" class="waves-effect waves-light btn black">Gerar</button>
+                        <button type="submit" id="botaoGerar" onclick="validarJson('json')" class="waves-effect waves-light btn black">Converter</button>
                     </div>
                 </form>
                 </div>
