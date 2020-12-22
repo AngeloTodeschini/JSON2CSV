@@ -47,7 +47,7 @@
                         <span class="card-title" style="font-weight:700;">Saida</span>
                         <div class="row">
                             <div class="input-field col s12">
-                            <textarea placeholder="Aqui estará seu CSV" name="csv" id="csvOutput" class="materialize-textarea white" style="overflow-y: scroll; height: 300px; max-height: 300px;">{{isset($finalCSV) ? $finalCSV : null}}</textarea>
+                            <textarea placeholder="Aqui estará seu CSV" name="csv" id="csvOutput" class="materialize-textarea white" style="overflow-y: scroll; overflow-x: scroll; height: 300px; max-height: 300px;">{{isset($finalCSV) ? $finalCSV : null}}</textarea>
                             </div>
                         </div>
                     </div>
