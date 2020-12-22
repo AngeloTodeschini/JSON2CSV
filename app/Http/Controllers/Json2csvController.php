@@ -10,76 +10,44 @@ class Json2csvController extends Controller
         return view('index');
     }
 
+    //Função que fará toda a conversão de JSON para CSV.
     public function converte(Request $request){
         $jsonArray = $request->json;
         $jsonArray = json_decode($jsonArray, true);
 
-        $csv = array();
         $header = array();
+        $csv = array();
         $jsonReplace = array();
         
         if(is_array($jsonArray)){
-            foreach($jsonArray as $json){
-                $jsonKeys = array_keys($json);
-
-                foreach($jsonKeys as $key){
-                    if(!in_array($key, $header)){
-                        $header[] = $key;
-                    }
+            //Verifica se existem múltiplos JSONs
+            if(array_keys($jsonArray) == range(0, count($jsonArray) - 1)){
+                foreach($jsonArray as $json){
+                    $result = $this->make_header($json, $header);
+                    $header = $result[0];
+                    $jsonReplace[] = $result[1];
                 }
-
-                foreach($json as $key => $value){
-                    if(is_array($value)){
-                        for($i = 1; $i < sizeof($value); $i++){
-                            $header[] = $key . $i;
-                            $value = $this->change_key($value, $i, $key.$i);           
-                        }
-                        $json[$key] = $value;
-                    }
+                
+                $csv[] = '"' . implode('","', $header) . '"';
+                
+                foreach($jsonReplace as $json){
+                    $result = $this->make_values($json, $header);
+                    $csv[] = '"' . implode('","', $result) . '"';
                 }
-                $jsonReplace[] = $json;
             }
-            
-            $csv[] = '"' . implode('","', $header) . '"';
+            else{
+                $result = $this->make_header($jsonArray, $header);
+                $header = $result[0];
+                $jsonReplace = $result[1];
 
-            foreach($jsonReplace as $json){
-                $fieldValues = array();
+                $csv[] = '"' . implode('","', $header) . '"';
 
-                foreach($header as $index){
-                    if(array_key_exists($index, $json)){
-                        if(is_array($json[$index])){
-                            $indexArray = $json[$index];
-                            $fieldValues[] = htmlspecialchars($indexArray[0]);
-                        }
-                        else{
-                            $fieldValues[] = htmlspecialchars($json[$index]);
-                            
-                        }
-                    }
-                    else{
-                        foreach($json as $key => $value){
-                            if(is_array($value) && array_key_exists($index, $value)){
-                                $thereIsArray = true;
-                                $fieldValues[] = htmlspecialchars($value[$index]);
-                                break;
-                            }
-                            else{
-                                $thereIsArray = false;
-                            }
-                        }
-                        if(!$thereIsArray){
-                            $fieldValues[] = htmlspecialchars('');
-                        }
-                    }
-                }
-                $csv[] = '"' . implode('","', $fieldValues) . '"';
+                $result = $this->make_values($jsonReplace, $header);
+                $csv[] = '"' . implode('","', $result) . '"';
             }
-            
-            dd($csv);
             
             $finalCSV = implode("\n", $csv);
-                
-                return view('index', compact('finalCSV'));
+            return view('index', compact('finalCSV'));
             
         }
         else{
@@ -88,6 +56,7 @@ class Json2csvController extends Controller
         
     }
 
+    //Função para alterar as chaves do array de um dos campos do JSON caso exista.
     function change_key( $array, $old_key, $new_key ) {
 
         if( ! array_key_exists( $old_key, $array ) )
@@ -99,8 +68,59 @@ class Json2csvController extends Controller
         return array_combine( $keys, $array );
     }
 
-    function make_header(){
-        
+    //Função para Criar o Cabeçalho do CSV.
+    function make_header($json, $header){
+        $jsonKeys = array_keys($json);
+
+        foreach($jsonKeys as $key){
+            if(!in_array($key, $header)){
+                $header[] = $key;
+            }
+        }
+
+        foreach($json as $key => $value){
+            if(is_array($value)){
+                for($i = 1; $i < count($value); $i++){
+                    $header[] = $key . $i;
+                    $value = $this->change_key($value, $i, $key.$i);           
+                }
+                $json[$key] = $value;
+            }
+        }
+
+        return array($header, $json);
     }
-    
+
+    //Função para criar o corpo do CSV.
+    function make_values($json, $header){
+        $fieldValues = array();
+
+        foreach($header as $index){
+            if(array_key_exists($index, $json)){
+                if(is_array($json[$index])){
+                    $indexArray = $json[$index];
+                    $fieldValues[] = htmlspecialchars($indexArray[0]);
+                }
+                else{
+                    $fieldValues[] = htmlspecialchars($json[$index]);
+                }
+            }
+            else{
+                foreach($json as $key => $value){
+                    if(is_array($value) && array_key_exists($index, $value)){
+                        $thereIsArray = true;
+                        $fieldValues[] = htmlspecialchars($value[$index]);
+                        break;
+                    }
+                    else{
+                        $thereIsArray = false;
+                    }
+                }
+                if(!$thereIsArray){
+                    $fieldValues[] = htmlspecialchars('');
+                }
+            }
+        }
+        return $fieldValues;
+    }
 }
